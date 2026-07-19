@@ -230,10 +230,64 @@ section{ padding: 60px clamp(20px, 6vw, 56px); max-width:920px; margin-inline:au
   }
 
   a:focus-visible, button:focus-visible{ outline: 2px solid var(--sheen-3); outline-offset: 3px; border-radius: 4px; }
+
+  #progress{ position:fixed; top:0; left:0; height:2px; width:0; z-index:60;
+    background: linear-gradient(90deg, var(--sheen-1), var(--sheen-2), var(--sheen-3)); }
+
+  .nav-links a.active{ color: var(--text); }
+  .nav-links a.active::after{ width:100%; }
+
+  .skill-group, .project-card{ transform-style: preserve-3d; }
+
+  #landing{
+    position:fixed; inset:0; z-index:100; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:22px; text-align:center;
+    background: radial-gradient(ellipse 120% 80% at 50% 40%, #1a1230 0%, var(--bg) 60%);
+    background-size: 130% 130%; animation: land-bg 14s ease-in-out infinite;
+    transition: opacity .8s ease, visibility .8s ease;
+  }
+  @keyframes land-bg{ 0%,100%{ background-position:50% 40%; } 50%{ background-position:50% 55%; } }
+  #landing.gone{ opacity:0; visibility:hidden; }
+  #landing img{ width:88px; height:88px; border-radius:16px; object-fit:cover;
+    box-shadow: 0 20px 60px -15px rgba(139,92,246,.5); }
+  /* combined: intro fade-up + continuous float. One declaration so neither is clobbered. */
+  #landing img.fade-up{ animation: land-in .7s ease forwards, land-float 5s ease-in-out infinite 1s; }
+  @keyframes land-float{ 0%,100%{ transform: translateY(0); box-shadow: 0 20px 60px -15px rgba(139,92,246,.5); }
+    50%{ transform: translateY(-8px); box-shadow: 0 32px 70px -15px rgba(139,92,246,.75); } }
+  #landing h1{ font-size: clamp(2.2rem, 7vw, 4rem); font-weight:800; letter-spacing:-1px; }
+  #landing .sub{ font-family:var(--mono); font-size:.82rem; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
+  #enter{
+    margin-top:6px; font-family:var(--mono); font-size:.88rem; color:var(--text);
+    padding:12px 30px; border-radius:999px; cursor:pointer;
+    background: var(--surface); border:1px solid var(--border);
+    transition: border-color .3s, transform .3s, background .3s;
+  }
+  #landing #enter{ animation: land-in .7s ease .36s forwards, enter-pulse 2.6s ease-in-out infinite 1.4s; }
+  @keyframes enter-pulse{ 0%,100%{ box-shadow: 0 0 0 0 rgba(139,92,246,.35); } 50%{ box-shadow: 0 0 0 8px rgba(139,92,246,0); } }
+  #enter .arr{ display:inline-block; transition: transform .25s; animation: arr-nudge 1.8s ease-in-out infinite; }
+  @keyframes arr-nudge{ 0%,100%{ transform: translateX(0); } 50%{ transform: translateX(4px); } }
+  #landing #enter:hover, #landing #enter:focus-visible{ border-color: rgba(139,92,246,.6); background: var(--surface-2); transform: translateY(-2px); animation: land-in .7s ease forwards; }
+  #enter:hover .arr{ transform: translateX(5px); }
+  #landing .fade-up{ opacity:0; transform: translateY(16px); animation: land-in .7s ease forwards; }
+  #landing .fade-up:nth-child(2){ animation-delay:.12s; } #landing .fade-up:nth-child(3){ animation-delay:.24s; }
+  @keyframes land-in{ to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){
+    #landing, #landing img, #landing img.fade-up, #landing #enter, #enter .arr{ animation:none !important; }
+    #landing .fade-up{ opacity:1; transform:none; }
+    #landing img{ box-shadow: 0 20px 60px -15px rgba(139,92,246,.5); }
+  }
 </style>
 </head>
 <body>
 
+<div id="landing">
+  <img class="fade-up raven-mark" src="" alt="ItsRavensLand raven mark">
+  <h1 class="fade-up">ItsRavens<span class="sheen-text">Land</span></h1>
+  <p class="sub fade-up">Java Developer · Minecraft Plugin Architect</p>
+  <button id="enter" class="fade-up">Enter <span class="arr">→</span></button>
+</div>
+
+<div id="progress" aria-hidden="true"></div>
 <canvas id="particles" aria-hidden="true"></canvas>
 <div class="orb orb-1" aria-hidden="true"></div>
 <div class="orb orb-2" aria-hidden="true"></div>
@@ -434,6 +488,17 @@ section{ padding: 60px clamp(20px, 6vw, 56px); max-width:920px; margin-inline:au
   (function(){
     const body = document.getElementById('terminalBody');
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // landing overlay
+    const landing = document.getElementById('landing');
+    landing.querySelector('img').src = document.querySelector('.brand img').src;
+    document.body.style.overflow = 'hidden';
+    function enter(){
+      landing.classList.add('gone');
+      document.body.style.overflow = '';
+      setTimeout(() => landing.remove(), 850);
+    }
+    document.getElementById('enter').addEventListener('click', enter);
     const script = [
       { type:'prompt', text:'whoami' },
       { type:'out', text:'ItsRavensLand' },
@@ -510,6 +575,42 @@ section{ padding: 60px clamp(20px, 6vw, 56px); max-width:920px; margin-inline:au
       setTimeout(() => el.classList.add('visible'), 200 + idx * 160);
     });
 
+    // scroll progress bar + nav scroll-spy
+    const bar = document.getElementById('progress');
+    const navMap = new Map([...document.querySelectorAll('.nav-links a')].map(a => [a.getAttribute('href').slice(1), a]));
+    const sections = [...document.querySelectorAll('section[id]')];
+    function onScroll(){
+      const st = document.documentElement.scrollTop || document.body.scrollTop;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (max > 0 ? (st / max) * 100 : 0) + '%';
+      let current = '';
+      for(const s of sections){ if(s.getBoundingClientRect().top < window.innerHeight * 0.4) current = s.id; }
+      navMap.forEach((a, id) => a.classList.toggle('active', id === current));
+    }
+    window.addEventListener('scroll', onScroll, { passive:true });
+    onScroll();
+
+    // stat count-up on reveal
+    document.querySelectorAll('.stat-num').forEach(el => {
+      const m = el.textContent.match(/^(\d+)(.*)$/);
+      if(!m || prefersReduced) return;
+      const target = +m[1], suffix = m[2];
+      el.textContent = '0' + suffix;
+      const io = new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => {
+          if(!e.isIntersecting) return;
+          obs.disconnect();
+          const start = performance.now(), dur = 1100;
+          (function step(now){
+            const p = Math.min((now - start) / dur, 1);
+            el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))) + suffix;
+            if(p < 1) requestAnimationFrame(step);
+          })(start);
+        });
+      }, { threshold: 0.6 });
+      io.observe(el);
+    });
+
     if(!prefersReduced){
       const canvas = document.getElementById('particles');
       const ctx = canvas.getContext('2d');
@@ -581,9 +682,12 @@ section{ padding: 60px clamp(20px, 6vw, 56px); max-width:920px; margin-inline:au
       document.querySelectorAll('.skill-group, .project-card').forEach(el => {
         el.addEventListener('mousemove', (e) => {
           const rect = el.getBoundingClientRect();
+          const px = (e.clientX - rect.left) / rect.width, py = (e.clientY - rect.top) / rect.height;
           el.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
           el.style.setProperty('--my', (e.clientY - rect.top) + 'px');
+          el.style.transform = `translateY(-4px) perspective(700px) rotateX(${(0.5 - py) * 6}deg) rotateY(${(px - 0.5) * 6}deg)`;
         });
+        el.addEventListener('mouseleave', () => { el.style.transform = ''; });
       });
     }
   })();
