@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ItsRavensLand — Java Plugin Developer & Backend Engineer</title>
+  <meta name="description" content="ItsRavensLand builds high-performance Minecraft plugins, Linux CLI tools, and backend systems in Java, Python, Go, and Rust.">
+  <meta name="theme-color" content="#0B0B10">
+  <meta name="author" content="ItsRavensLand">
+  <meta name="color-scheme" content="dark">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ItsRavensLand — Java Plugin Dev & Backend Engineer">
+  <meta property="og:description" content="Minecraft plugins, Linux CLI tools, and backend systems built in Java, Python, Go, and Rust.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ItsRavensLand — Java Plugin Dev & Backend Engineer">
+  <meta name="twitter:description" content="Minecraft plugins, Linux CLI tools, and backend systems built in Java, Python, Go, and Rust.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* ── surfaces ── */
+      --bg: #0B0B10;
+      --panel: #121219;
+      --surface: #17171F;
+      --surface-hover: #1C1C26;
+
+      /* ── borders ── */
+      --border: #24242F;
+      --border-active: #2E2E3D;
+
+      /* ── text ── */
+      --text: #E7E7F0;
+      --text-2: #A9A9BD;
+      --text-dim: #55556A;
+
+      /* ── brand ── */
+      --violet: #7C3AED;
+      --indigo: #6366F1;
+      --lavender: #818CF8;
+      --iris: #A78BFA;
+
+      /* ── syntax tokens ── */
+      --kw: #C4B5FD;
+      --fn: #818CF8;
+      --str: #34D399;
+      --num: #FBBF24;
+      --punct: #A9A9BD;
+      --comment: #55556A;
+
+      /* ── semantic ── */
+      --green: #34D399;
+      --green-glow: rgba(52, 211, 153, 0.25);
+      --error: #F87171;
+      --glow: rgba(99, 102, 241, 0.18);
+      --focus: #A78BFA;
+
+      --mono: 'JetBrains Mono', 'Liberation Mono', 'DejaVu Sans Mono', monospace;
+      --sora: 'Sora', 'Segoe UI', system-ui, sans-serif;
+
+      --frame-max: 1160px;
+      --topbar-h: 52px;
+      --statusbar-h: 30px;
+      --rail-w: 52px;
+      --radius: 4px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--mono);
+      font-size: 14px;
+      line-height: 1.6;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow-x: hidden;
+      padding-bottom: var(--statusbar-h);
+    }
+
+    ::selection { background: rgba(124, 58, 237, 0.35); color: #fff; }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+    :focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+    .skip-link {
+      position: fixed; top: -60px; left: 12px; z-index: 400;
+      background: var(--indigo); color: #fff;
+      padding: 10px 18px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 500;
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus { top: 12px; }
+
+    /* ─── SCROLL PROGRESS ─── */
+    #progress {
+      position: fixed; top: 0; left: 0; z-index: 350;
+      height: 2px; width: 0%;
+      background: linear-gradient(90deg, var(--violet), var(--indigo), var(--lavender));
+    }
+
+    /* ─── TOP TITLE BAR ─── */
+    .topbar {
+      position: sticky; top: 0; z-index: 300;
+      height: var(--topbar-h);
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .topbar.scrolled { box-shadow: 0 6px 24px rgba(0,0,0,0.5); border-bottom-color: var(--border-active); }
+    .topbar-inner {
+      max-width: var(--frame-max); height: 100%;
+      margin: 0 auto; padding: 0 16px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-tile { width: 28px; height: 28px; flex-shrink: 0; display: block; }
+    .brand-name { font-family: var(--sora); font-weight: 700; font-size: 0.98rem; letter-spacing: -0.3px; white-space: nowrap; }
+    .brand-name b { font-weight: 700; color: var(--iris); }
+    .file-tab {
+      font-size: 12px; color: var(--text-2);
+      background: var(--surface); border: 1px solid var(--border);
+      border-bottom: 2px solid var(--indigo);
+      padding: 3px 10px; border-radius: 3px 3px 0 0;
+      margin-left: 4px; white-space: nowrap;
+    }
+    @media (max-width: 620px) { .file-tab { display: none; } }
+
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+
+    .nav-tabs {
+      display: flex; align-items: center; gap: 2px;
+      list-style: none;
+    }
+    .nav-tabs a {
+      display: block; position: relative;
+      padding: 7px 12px; font-size: 13px; color: var(--text-2);
+      border-radius: 3px; transition: color 0.15s, background 0.15s;
+    }
+    .nav-tabs a::before { content: '· '; color: var(--text-dim); }
+    .nav-tabs a:hover { color: var(--text); background: var(--surface); }
+    .nav-tabs a::after {
+      content: ''; position: absolute; left: 12px; right: 12px; bottom: 2px;
+      height: 1px; background: var(--iris);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.25s ease;
+    }
+    .nav-tabs a.active { color: var(--text); }
+    .nav-tabs a.active::after { transform: scaleX(1); }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 5px 12px; border-radius: 99px;
+      background: rgba(52, 211, 153, 0.06);
+      border: 1px solid rgba(52, 211, 153, 0.28);
+      font-size: 12px; color: var(--green); white-space: nowrap;
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 0 0 var(--green-glow);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0 var(--green-glow); }
+      70%  { box-shadow: 0 0 0 7px rgba(52,211,153,0); }
+      100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
+    }
+
+    .hamburger {
+      display: none; width: 36px; height: 36px;
+      align-items: center; justify-content: center;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      background: var(--surface); color: var(--text);
+    }
+    .hamburger:hover { border-color: var(--iris); }
+
+    /* ─── FRAME + RAIL ─── */
+    .frame {
+      max-width: var(--frame-max); margin: 0 auto;
+      display: grid; grid-template-columns: var(--rail-w) 1fr;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      min-height: calc(100vh - var(--topbar-h) - var(--statusbar-h));
+    }
+
+    .rail {
+      position: sticky; top: var(--topbar-h);
+      align-self: start;
+      height: calc(100vh - var(--topbar-h) - var(--statusbar-h));
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center;
+      gap: 4px; padding: 14px 0;
+    }
+    .rail a {
+      position: relative; width: 38px; height: 38px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-dim); border-radius: var(--radius);
+      transition: color 0.15s, background 0.15s;
+    }
+    .rail a::before {
+      content: ''; position: absolute; left: -14px; top: 8px; bottom: 8px;
+      width: 2px; border-radius: 2px; background: var(--iris);
+      transform: scaleY(0); transition: transform 0.2s ease;
+    }
+    .rail a:hover { color: var(--text-2); background: var(--surface); }
+    .rail a.active { color: var(--iris); }
+    .rail a.active::before { transform: scaleY(1); }
+    .rail svg { width: 19px; height: 19px; }
+
+    .content { min-width: 0; padding: 0 clamp(20px, 4vw, 44px); }
+
+    /* ─── BUFFER (section) ─── */
+    .buffer { padding: clamp(56px, 8vw, 96px) 0; border-top: 1px solid var(--border); }
+    .buffer:first-child { border-top: none; }
+    .buffer[id] { scroll-margin-top: calc(var(--topbar-h) + 12px); }
+
+    .buffer-tab {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 500; color: var(--text-2);
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 5px 12px; border-radius: 3px 3px 0 0;
+      border-bottom: 2px solid var(--border-active);
+    }
+    .buffer-tab .plate { color: var(--text-dim); }
+    .buffer-tab .fname { color: var(--fn); }
+    .subtitle {
+      font-family: var(--sora); font-weight: 700; font-size: 1.35rem;
+      letter-spacing: -0.4px; margin: 18px 0 6px;
+    }
+    .sec-lead { color: var(--text-2); max-width: 62ch; margin-bottom: 34px; }
+
+    /* ─── HERO ─── */
+    #hero { border-top: none; }
+    .hero-grid {
+      display: grid; grid-template-columns: 1.05fr 0.95fr;
+      gap: clamp(28px, 5vw, 56px); align-items: center;
+    }
+    .eyebrow {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-dim); margin-bottom: 20px;
+    }
+    .eyebrow .c { color: var(--comment); }
+    .hero-name {
+      font-family: var(--sora); font-weight: 800;
+      font-size: clamp(2.2rem, 5vw, 3rem); line-height: 1.05;
+      letter-spacing: -1.5px; margin-bottom: 22px;
+    }
+    .hero-name .land { color: var(--iris); }
+    .hero-lead { color: var(--text-2); max-width: 52ch; margin-bottom: 20px; }
+    .hero-lead b { color: var(--text); font-weight: 500; }
+    .credo {
+      border-left: 2px solid var(--iris); padding-left: 14px;
+      color: var(--text); font-weight: 500; margin-bottom: 34px;
+    }
+    .cta-row { display: flex; flex-wrap: wrap; gap: 12px; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 18px; font-size: 13px; font-weight: 500;
+      border-radius: var(--radius); border: 1px solid var(--border);
+      background: var(--surface); color: var(--text);
+      box-shadow: 0 3px 0 rgba(0,0,0,0.45);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, border-color 0.15s, background 0.15s;
+    }
+    .btn:hover { border-color: var(--iris); }
+    .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.45); }
+    .btn .arrow { color: var(--iris); }
+    .btn-solid {
+      background: var(--indigo); border-color: var(--indigo); color: #fff;
+      box-shadow: 0 3px 0 #3f43c9;
+    }
+    .btn-solid:hover { background: #7276f4; border-color: #7276f4; }
+    .btn-solid:active { box-shadow: 0 1px 0 #3f43c9; }
+    .btn-solid .arrow { color: rgba(255,255,255,0.85); }
+
+    /* ─── TERMINAL ─── */
+    .term-wrap { position: relative; }
+    .term-wrap::before {
+      content: ''; position: absolute; inset: -18% -12% -22% -12%;
+      background: radial-gradient(ellipse at 60% 40%, var(--glow), transparent 70%);
+      filter: blur(24px); z-index: 0; pointer-events: none;
+    }
+    .term {
+      position: relative; z-index: 1;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      box-shadow: 0 20px 50px -20px rgba(0,0,0,0.7);
+    }
+    .term::before {
+      content: ''; display: block; height: 1px;
+      background: linear-gradient(90deg, var(--violet), var(--indigo), var(--lavender));
+    }
+    .term-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 14px; border-bottom: 1px solid var(--border);
+      font-size: 11px; color: var(--text-dim);
+    }
+    .term-bar .dot { color: var(--violet); }
+    .term-body {
+      padding: 16px 16px 18px; min-height: 232px;
+      font-size: 13px; line-height: 1.5;
+    }
+    .term-lines { display: grid; grid-template-columns: auto 1fr; column-gap: 16px; }
+    .lnum { color: var(--text-dim); text-align: right; user-select: none; }
+    .lcode { white-space: pre-wrap; word-break: break-word; }
+    .t-prompt { color: var(--indigo); font-weight: 500; }
+    .t-cmd { color: var(--text); }
+    .t-str { color: var(--str); }
+    .t-out { color: var(--text-2); }
+    .t-ok { color: var(--green); }
+    .caret {
+      display: inline-block; width: 0.6em; height: 1.05em;
+      background: var(--violet); vertical-align: -0.18em; margin-left: 1px;
+      animation: blink 1s steps(2, start) infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* ─── ABOUT ─── */
+    .about-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 16px; margin-bottom: 40px;
+    }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px;
+      transition: transform 0.15s ease, border-color 0.15s;
+    }
+    .card:hover { border-color: var(--iris); transform: translateY(-1px); }
+    .card-icon {
+      width: 38px; height: 38px; border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(124, 58, 237, 0.1); border: 1px solid rgba(124, 58, 237, 0.25);
+      color: var(--iris); margin-bottom: 16px;
+    }
+    .card-icon svg { width: 20px; height: 20px; }
+    .card h3 { font-family: var(--sora); font-weight: 700; font-size: 1.05rem; margin-bottom: 8px; }
+    .card p { color: var(--text-2); font-size: 13px; line-height: 1.6; margin-bottom: 12px; }
+    .card .tech { color: var(--comment); font-size: 12.5px; }
+
+    .stats {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    }
+    .stat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 18px;
+      transition: border-color 0.15s;
+    }
+    .stat:hover { border-color: var(--border-active); }
+    .stat .num {
+      font-weight: 700; font-size: clamp(1.6rem, 3vw, 2.1rem);
+      color: var(--num); font-variant-numeric: tabular-nums; line-height: 1.1;
+    }
+    .stat .key {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-dim); margin-top: 8px;
+    }
+
+    /* ─── SKILLS ─── */
+    .stack-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .stack {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px;
+    }
+    .stack-head {
+      font-size: 13px; color: var(--kw); margin-bottom: 14px;
+      padding-bottom: 12px; border-bottom: 1px solid var(--border);
+    }
+    .stack-head .br { color: var(--text-dim); }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      font-size: 12.5px; color: var(--text-2);
+      background: var(--bg); border: 1px solid var(--border);
+      padding: 5px 11px; border-radius: 3px;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .chip:hover { color: var(--text); border-color: var(--iris); background: var(--surface-hover); }
+    .chip.hot { color: var(--iris); border-color: rgba(167, 139, 250, 0.3); background: rgba(124, 58, 237, 0.07); }
+
+    /* ─── PROJECTS ─── */
+    .proj-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .proj {
+      display: flex; flex-direction: column;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px;
+      transition: transform 0.15s ease, border-color 0.15s;
+    }
+    .proj:hover { border-color: var(--iris); transform: translateY(-1px); }
+    .proj-lang {
+      align-self: flex-start; font-size: 11px; font-weight: 500;
+      padding: 3px 9px; border-radius: 3px; margin-bottom: 14px;
+    }
+    .proj-lang.java { color: var(--iris); background: rgba(124, 58, 237, 0.12); border: 1px solid rgba(124, 58, 237, 0.3); }
+    .proj-lang.ps { color: var(--error); background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3); }
+    .proj-path { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+    .proj-path .org { color: var(--text-dim); }
+    .proj-path .repo { color: var(--fn); }
+    .proj-desc { color: var(--text-2); font-size: 13px; line-height: 1.6; margin-bottom: 20px; flex-grow: 1; }
+    .proj-desc::before { content: '// '; color: var(--comment); }
+    .proj-foot {
+      display: flex; gap: 10px; padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .proj-link {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 12.5px; color: var(--text-2);
+      padding: 6px 12px; border-radius: 3px; border: 1px solid var(--border);
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .proj-link svg { width: 14px; height: 14px; }
+    .proj-link:hover { color: var(--text); border-color: var(--iris); background: var(--surface-hover); }
+    .proj-link .flag { color: var(--comment); }
+
+    /* ─── CONTACT ─── */
+    .contact-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: clamp(24px, 4vw, 36px);
+    }
+    .env { display: grid; gap: 10px; margin-bottom: 26px; }
+    .env-row {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      padding: 12px 14px; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 3px;
+      transition: border-color 0.15s;
+    }
+    .env-row:hover { border-color: var(--border-active); }
+    .env-key {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
+      color: var(--text-dim); min-width: 92px;
+    }
+    .env-eq { color: var(--text-dim); }
+    .env-val { color: var(--fn); word-break: break-all; }
+    .env-row a.env-val { transition: color 0.15s; }
+    .env-row a.env-val:hover { color: var(--iris); text-decoration: underline; }
+    .copy-btn {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 11px 18px; font-size: 13px; font-weight: 500;
+      border-radius: var(--radius); border: 1px solid var(--border);
+      background: var(--bg); color: var(--text);
+      box-shadow: 0 3px 0 rgba(0,0,0,0.45);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, border-color 0.15s;
+    }
+    .copy-btn:hover { border-color: var(--iris); }
+    .copy-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.45); }
+    .copy-btn svg { width: 16px; height: 16px; color: var(--iris); }
+    .copy-btn .prompt { color: var(--indigo); }
+
+    /* ─── STATUS BAR (footer) ─── */
+    .statusbar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+      height: var(--statusbar-h);
+      background: var(--panel); border-top: 1px solid var(--border);
+    }
+    .statusbar-inner {
+      max-width: var(--frame-max); height: 100%; margin: 0 auto; padding: 0 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11.5px; color: var(--text-dim);
+    }
+    .statusbar .seg { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .statusbar .branch { color: var(--iris); }
+    .statusbar .sep { color: var(--border-active); margin: 0 8px; }
+    @media (max-width: 560px) { .statusbar .hide-sm { display: none; } }
+
+    /* ─── TOAST ─── */
+    .toast {
+      position: fixed; bottom: calc(var(--statusbar-h) + 16px); right: 20px; z-index: 500;
+      background: var(--surface); color: var(--str);
+      border: 1px solid var(--border-active); border-left: 2px solid var(--str);
+      padding: 11px 16px; border-radius: var(--radius); font-size: 12.5px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+      transform: translateY(16px); opacity: 0; pointer-events: none;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      .frame { grid-template-columns: 1fr; }
+      .rail { display: none; }
+      .hero-grid { grid-template-columns: 1fr; }
+      .term-wrap { order: 2; }
+      .about-grid { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .stack-grid, .proj-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .nav-tabs {
+        position: absolute; top: var(--topbar-h); left: 0; right: 0;
+        flex-direction: column; align-items: stretch; gap: 4px;
+        background: var(--panel); border-bottom: 1px solid var(--border);
+        padding: 14px; box-shadow: 0 18px 34px rgba(0,0,0,0.6);
+        transform: translateY(-12px); opacity: 0; visibility: hidden;
+        transition: transform 0.22s ease, opacity 0.22s ease, visibility 0.22s;
+      }
+      .nav-tabs.open { transform: translateY(0); opacity: 1; visibility: visible; }
+      .nav-tabs a { padding: 11px 12px; }
+      .hamburger { display: inline-flex; }
+      .status-pill .label { display: none; }
+      .status-pill { padding: 6px; }
+    }
+    @media (max-width: 420px) {
+      .cta-row .btn { width: 100%; justify-content: center; }
+      .stats { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .caret { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div id="progress" aria-hidden="true"></div>
+
+  <!-- ─── TITLE BAR ─── -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <a href="#hero" class="brand" aria-label="ItsRavensLand — home">
+        <svg class="brand-tile" viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <linearGradient id="rGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#7c3aed"/>
+              <stop offset="0.6" stop-color="#6366f1"/>
+              <stop offset="1" stop-color="#818cf8"/>
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="64" height="64" rx="16" fill="url(#rGrad)"/>
+          <text x="32" y="33" font-family="'JetBrains Mono', monospace" font-weight="700" font-size="34" fill="#fff" text-anchor="middle" dominant-baseline="central">R</text>
+        </svg>
+        <span class="brand-name">ItsRavens<b>Land</b></span>
+        <span class="file-tab" aria-hidden="true">index.html</span>
+      </a>
+
+      <div class="topbar-right">
+        <nav aria-label="Primary">
+          <ul class="nav-tabs" id="nav-tabs">
+            <li><a href="#about">About</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </nav>
+        <span class="status-pill" aria-label="Status: available for work">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span class="label">Available</span>
+        </span>
+        <button class="hamburger" id="menu-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-tabs">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="frame">
+
+    <!-- ─── ACTIVITY RAIL ─── -->
+    <aside class="rail" aria-label="Section navigation">
+      <a href="#hero" data-rail="hero" aria-label="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
+      </a>
+      <a href="#about" data-rail="about" aria-label="About">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+      </a>
+      <a href="#skills" data-rail="skills" aria-label="Skills">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      </a>
+      <a href="#projects" data-rail="projects" aria-label="Projects">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.3 7 12 12 20.7 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>
+      </a>
+      <a href="#contact" data-rail="contact" aria-label="Contact">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+      </a>
+    </aside>
+
+    <main class="content" id="main">
+
+      <!-- ─── HERO ─── -->
+      <section class="buffer" id="hero" aria-labelledby="hero-name">
+        <div class="buffer-tab"><span class="plate">00</span> <span class="fname">~/whoami</span></div>
+        <div class="hero-grid">
+          <div>
+            <p class="eyebrow"><span class="c">//</span> java plugin developer · backend engineer</p>
+            <h1 class="hero-name" id="hero-name">ItsRavens<span class="land">Land</span></h1>
+            <p class="hero-lead">
+              I build <b>Minecraft plugins</b>, <b>Linux CLI tools</b>, and <b>backend systems</b>
+              in Java, Python, Go, and Rust.
+            </p>
+            <p class="credo">Fast code. Clean architecture. No bloat.</p>
+            <div class="cta-row">
+              <a href="#projects" class="btn btn-solid">
+                View Projects
+                <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </a>
+              <a href="https://github.com/ItsRavensLand" target="_blank" rel="noopener noreferrer" class="btn" aria-label="ItsRavensLand on GitHub, opens in new tab">
+                GitHub <span class="arrow" aria-hidden="true">↗</span>
+              </a>
+              <a href="#contact" class="btn">Contact Me</a>
+            </div>
+          </div>
+
+          <div class="term-wrap">
+            <div class="term" role="img" aria-label="Terminal session: whoami returns itsravensland; cat /etc/os-release returns Linux-native; stack --list returns java, python, go, rust; status returns available for work.">
+              <div class="term-bar" aria-hidden="true">
+                <span class="dot">●</span>
+                <span>ravens@linux: ~</span>
+                <span>zsh</span>
+              </div>
+              <div class="term-body">
+                <div class="term-lines" id="term-lines" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── ABOUT ─── -->
+      <section class="buffer" id="about" aria-labelledby="about-title">
+        <div class="buffer-tab"><span class="plate">01</span> <span class="fname">about.md</span></div>
+        <h2 class="subtitle" id="about-title">About</h2>
+        <p class="sec-lead">What I build, and how I work.</p>
+
+        <div class="about-grid">
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+            </div>
+            <h3>Minecraft Plugins</h3>
+            <p>Java plugins on Paper API and Netty — low-latency, production-grade, zero overhead.</p>
+            <div class="tech">// Java · Paper API · Netty</div>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            </div>
+            <h3>Linux &amp; CLI Tools</h3>
+            <p>Shell scripts, audit utilities, and automation built for real server environments.</p>
+            <div class="tech">// shell · audit · automation</div>
+          </article>
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </div>
+            <h3>Backend Systems</h3>
+            <p>APIs and services in Python, Go, and Rust — minimal dependencies, maximum speed.</p>
+            <div class="tech">// Python · Go · Rust</div>
+          </article>
+        </div>
+
+        <dl class="stats" aria-label="Key stats">
+          <div class="stat"><dd class="num" data-count="4" data-suffix="">0</dd><dt class="key">Open-Source Projects</dt></div>
+          <div class="stat"><dd class="num" data-count="4" data-suffix="">0</dd><dt class="key">Languages</dt></div>
+          <div class="stat"><dd class="num" data-count="100" data-suffix="%">0%</dd><dt class="key">Linux Native</dt></div>
+          <div class="stat"><dd class="num" data-count="0" data-suffix="ms">0ms</dd><dt class="key">Target Overhead</dt></div>
+        </dl>
+      </section>
+
+      <!-- ─── SKILLS ─── -->
+      <section class="buffer" id="skills" aria-labelledby="skills-title">
+        <div class="buffer-tab"><span class="plate">02</span> <span class="fname">stack.toml</span></div>
+        <h2 class="subtitle" id="skills-title">Stack</h2>
+        <p class="sec-lead">Technologies I reach for every day.</p>
+
+        <div class="stack-grid">
+          <div class="stack">
+            <div class="stack-head"><span class="br">[</span>java_systems<span class="br">]</span> <span style="color:var(--text-dim)">= "primary"</span></div>
+            <div class="chips">
+              <span class="chip hot">Java</span>
+              <span class="chip hot">Paper API</span>
+              <span class="chip">Netty</span>
+              <span class="chip">ProtocolLib</span>
+              <span class="chip">Packet Serialization</span>
+              <span class="chip">PlaceholderAPI</span>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="stack-head"><span class="br">[</span>python_automation<span class="br">]</span> <span style="color:var(--text-dim)">= "backend"</span></div>
+            <div class="chips">
+              <span class="chip hot">Python</span>
+              <span class="chip hot">Django</span>
+              <span class="chip">AsyncIO</span>
+              <span class="chip">Telethon</span>
+              <span class="chip">Discord.py</span>
+              <span class="chip">REST APIs</span>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="stack-head"><span class="br">[</span>systems_scripting<span class="br">]</span> <span style="color:var(--text-dim)">= "languages"</span></div>
+            <div class="chips">
+              <span class="chip hot">Go</span>
+              <span class="chip hot">Rust</span>
+              <span class="chip">Node.js</span>
+              <span class="chip">Bash / Shell</span>
+              <span class="chip">PowerShell</span>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="stack-head"><span class="br">[</span>platform_os<span class="br">]</span> <span style="color:var(--text-dim)">= "environment"</span></div>
+            <div class="chips">
+              <span class="chip hot">Linux OS</span>
+              <span class="chip">Git / GitHub</span>
+              <span class="chip">Docker</span>
+              <span class="chip">Server Tooling</span>
+              <span class="chip">Systemd</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── PROJECTS ─── -->
+      <section class="buffer" id="projects" aria-labelledby="projects-title">
+        <div class="buffer-tab"><span class="plate">03</span> <span class="fname">projects.json</span></div>
+        <h2 class="subtitle" id="projects-title">Projects</h2>
+        <p class="sec-lead">Selected work and open-source contributions.</p>
+
+        <div class="proj-grid">
+          <article class="proj">
+            <span class="proj-lang java">[Java]</span>
+            <div class="proj-path"><span class="org">ItsRavensLand/</span><span class="repo">CombatLens</span></div>
+            <p class="proj-desc">Real-time PvP tracking and damage analysis for Paper servers.</p>
+            <div class="proj-foot">
+              <a href="https://github.com/ItsRavensLand/CombatLens" target="_blank" rel="noopener noreferrer" class="proj-link" aria-label="CombatLens source on GitHub, opens in new tab">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.19c0 4.49 2.87 8.3 6.84 9.64.5.1.68-.22.68-.49v-1.92c-2.78.62-3.37-1.36-3.37-1.36-.46-1.19-1.11-1.51-1.11-1.51-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.9 1.57 2.36 1.12 2.94.85.09-.67.35-1.12.64-1.38-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.79-4.57 5.05.36.32.68.94.68 1.9v2.82c0 .27.18.6.69.49A10.02 10.02 0 0 0 22 12.19C22 6.58 17.52 2 12 2z"/></svg>
+                <span class="flag">--source</span>
+              </a>
+              <a href="https://github.com/ItsRavensLand/CombatLens#readme" target="_blank" rel="noopener noreferrer" class="proj-link" aria-label="CombatLens docs, opens in new tab">
+                <span class="flag">--readme</span>
+              </a>
+            </div>
+          </article>
+
+          <article class="proj">
+            <span class="proj-lang java">[Java]</span>
+            <div class="proj-path"><span class="org">ItsRavensLand/</span><span class="repo">RankAnimator</span></div>
+            <p class="proj-desc">Animated rank prefix renderer — integrates with LuckPerms, TAB, and PlaceholderAPI.</p>
+            <div class="proj-foot">
+              <a href="https://github.com/ItsRavensLand/RankAnimator" target="_blank" rel="noopener noreferrer" class="proj-link" aria-label="RankAnimator source on GitHub, opens in new tab">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.19c0 4.49 2.87 8.3 6.84 9.64.5.1.68-.22.68-.49v-1.92c-2.78.62-3.37-1.36-3.37-1.36-.46-1.19-1.11-1.51-1.11-1.51-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.9 1.57 2.36 1.12 2.94.85.09-.67.35-1.12.64-1.38-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.79-4.57 5.05.36.32.68.94.68 1.9v2.82c0 .27.18.6.69.49A10.02 10.02 0 0 0 22 12.19C22 6.58 17.52 2 12 2z"/></svg>
+                <span class="flag">--source</span>
+              </a>
+              <a href="https://github.com/ItsRavensLand/RankAnimator#readme" target="_blank" rel="noopener noreferrer" class="proj-link" aria-label="RankAnimator docs, opens in new tab">
+                <span class="flag">--readme</span>
+              </a>
+            </div>
+          </article>
+
+          <article class="proj">
+            <span class="proj-lang java">[Java]</span>
+            <div class="proj-path"><span class="org">ItsRavensLand/</span><span class="repo">RoadForge</span></div>
+            <p class="proj-desc">Automates building, management, and pathfinding across large Minecraft worlds.</p>
+            <div class="proj-foot">
+              <a href="https://github.com/ItsRavensLand/RoadForge" target="_blank" rel="noopener noreferrer" class="proj-link" aria-label="RoadForge source on GitHub, opens in new tab">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.19c0 4.49 2.87 8.3 6.84 9.64.5.1.68-.22.68-.49v-1.92c-2.78.62-3.37-1.36-3.37-1.36-.46-1.19-1.11-1.51-1.11-1.51-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.9 1.57 2.36 1.12 2.94.85.09-.67.35-1.12.64-1.38-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.79-4.57 5.05.36.32.68.94.68 1.9v2.82c0 .27.18.6.69.49A10.02 10.02 0 0 0 22 12.19C22 6.58 17.52 2 12 2z"/></svg>
+                <span class="flag">--source</span>
+              </a>
+              <a href="https://github.com/ItsRavensLand/RoadForge#readme" target="_blank" rel="noopener noreferrer" class="proj-link" aria-label="RoadForge docs, opens in new tab">
+                <span class="flag">--readme</span>
+              </a>
+            </div>
+          </article>
+
+          <article class="proj">
+            <span class="proj-lang ps">[PowerShell]</span>
+            <div class="proj-path"><span class="org">ItsRavensLand/</span><span class="repo">LiteEye Audit</span></div>
+            <p class="proj-desc">Scans client environments for unauthorized mods and anti-cheat violations.</p>
+            <div class="proj-foot">
+              <a href="https://github.com/ItsRavensLand/LiteEye---For-LiteCummunity" target="_blank" rel="noopener noreferrer" class="proj-link" aria-label="LiteEye Audit source on GitHub, opens in new tab">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.19c0 4.49 2.87 8.3 6.84 9.64.5.1.68-.22.68-.49v-1.92c-2.78.62-3.37-1.36-3.37-1.36-.46-1.19-1.11-1.51-1.11-1.51-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.9 1.57 2.36 1.12 2.94.85.09-.67.35-1.12.64-1.38-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.79-4.57 5.05.36.32.68.94.68 1.9v2.82c0 .27.18.6.69.49A10.02 10.02 0 0 0 22 12.19C22 6.58 17.52 2 12 2z"/></svg>
+                <span class="flag">--source</span>
+              </a>
+              <a href="https://github.com/ItsRavensLand/LiteEye---For-LiteCummunity#readme" target="_blank" rel="noopener noreferrer" class="proj-link" aria-label="LiteEye Audit docs, opens in new tab">
+                <span class="flag">--readme</span>
+              </a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ─── CONTACT ─── -->
+      <section class="buffer" id="contact" aria-labelledby="contact-title">
+        <div class="buffer-tab"><span class="plate">04</span> <span class="fname">contact.env</span></div>
+        <h2 class="subtitle" id="contact-title">Contact</h2>
+        <p class="sec-lead">Available for plugin commissions and backend projects.</p>
+
+        <div class="contact-wrap">
+          <dl class="env">
+            <div class="env-row">
+              <dt class="env-key">GITHUB</dt><span class="env-eq">=</span>
+              <dd><a class="env-val" href="https://github.com/ItsRavensLand" target="_blank" rel="noopener noreferrer" aria-label="GitHub profile, opens in new tab">github.com/ItsRavensLand</a></dd>
+            </div>
+            <div class="env-row">
+              <dt class="env-key">DISCORD</dt><span class="env-eq">=</span>
+              <dd><a class="env-val" href="https://discord.gg/swJCPwDb" target="_blank" rel="noopener noreferrer" aria-label="Discord invite, opens in new tab">discord.gg/swJCPwDb</a></dd>
+            </div>
+            <div class="env-row">
+              <dt class="env-key">TELEGRAM</dt><span class="env-eq">=</span>
+              <dd><a class="env-val" href="https://t.me/ItsRavens" target="_blank" rel="noopener noreferrer" aria-label="Telegram, opens in new tab">t.me/ItsRavens</a></dd>
+            </div>
+          </dl>
+          <button class="copy-btn" id="copy-email" aria-label="Copy email address to clipboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span><span class="prompt">$</span> xclip -sel c &lt; email</span>
+          </button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ─── STATUS BAR (footer) ─── -->
+  <footer class="statusbar" aria-label="Status bar">
+    <div class="statusbar-inner">
+      <span class="seg"><span class="branch">⎇ main</span> <span class="hide-sm">Linux x86_64</span></span>
+      <span class="seg">
+        ItsRavensLand © <span id="year">2026</span>
+        <span class="sep hide-sm">·</span><span class="hide-sm">Built on Linux</span>
+        <span class="sep hide-sm">·</span><span class="hide-sm">UTF-8</span>
+        <span class="sep hide-sm">·</span><span class="hide-sm">LF</span>
+      </span>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">→ copied itsravensland@gmail.com</div>
+
+  <script>
+    (function () {
+      'use strict';
+      var rm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      /* year */
+      var y = document.getElementById('year');
+      if (y) y.textContent = new Date().getFullYear();
+
+      /* progress bar + topbar scrolled */
+      var pb = document.getElementById('progress');
+      var topbar = document.getElementById('topbar');
+      function onScroll() {
+        var t = window.scrollY;
+        var h = document.documentElement.scrollHeight - window.innerHeight;
+        if (pb) pb.style.width = (h > 0 ? (t / h) * 100 : 0) + '%';
+        if (topbar) topbar.classList.toggle('scrolled', t > 8);
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      /* mobile menu */
+      var toggle = document.getElementById('menu-toggle');
+      var navTabs = document.getElementById('nav-tabs');
+      function closeMenu() {
+        if (!navTabs) return;
+        navTabs.classList.remove('open');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+      }
+      if (toggle && navTabs) {
+        toggle.addEventListener('click', function () {
+          var open = navTabs.classList.toggle('open');
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        navTabs.querySelectorAll('a').forEach(function (a) {
+          a.addEventListener('click', closeMenu);
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && navTabs.classList.contains('open')) {
+            closeMenu();
+            if (toggle) toggle.focus();
+          }
+        });
+      }
+
+      /* scrollspy → nav tabs + rail */
+      var secs = Array.prototype.slice.call(document.querySelectorAll('.buffer[id]'));
+      var navLinks = Array.prototype.slice.call(document.querySelectorAll('.nav-tabs a'));
+      var railLinks = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+      function setActive(id) {
+        navLinks.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + id); });
+        railLinks.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + id); });
+      }
+      if ('IntersectionObserver' in window && secs.length) {
+        var spy = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) { if (e.isIntersecting) setActive(e.target.id); });
+        }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+        secs.forEach(function (s) { spy.observe(s); });
+      }
+
+      /* stat count-up */
+      var nums = Array.prototype.slice.call(document.querySelectorAll('.num[data-count]'));
+      function fill(el) { el.textContent = el.getAttribute('data-count') + (el.getAttribute('data-suffix') || ''); }
+      if (rm || !('IntersectionObserver' in window)) {
+        nums.forEach(fill);
+      } else {
+        var counter = new IntersectionObserver(function (entries, obs) {
+          entries.forEach(function (e) {
+            if (!e.isIntersecting) return;
+            var el = e.target;
+            var target = parseInt(el.getAttribute('data-count'), 10);
+            var suffix = el.getAttribute('data-suffix') || '';
+            obs.unobserve(el);
+            if (target === 0) { fill(el); return; }
+            var start = null, dur = 650;
+            function step(ts) {
+              if (start === null) start = ts;
+              var p = Math.min((ts - start) / dur, 1);
+              var val = Math.round(p * target);
+              el.textContent = val + suffix;
+              if (p < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+          });
+        }, { threshold: 0.5 });
+        nums.forEach(function (el) { counter.observe(el); });
+      }
+
+      /* terminal typewriter */
+      var lines = document.getElementById('term-lines');
+      var steps = [
+        { cmd: 'whoami',             out: 'itsravensland',           cls: 't-out' },
+        { cmd: 'cat /etc/os-release', out: '"Linux-native"',          cls: 't-str' },
+        { cmd: 'stack --list',        out: 'java · python · go · rust', cls: 't-out' },
+        { cmd: 'status',              out: '● Available for work',     cls: 't-ok' }
+      ];
+      var ln = 0;
+      function addRow(codeHTML) {
+        ln++;
+        var num = document.createElement('span');
+        num.className = 'lnum';
+        num.textContent = ln < 10 ? '0' + ln : '' + ln;
+        var code = document.createElement('span');
+        code.className = 'lcode';
+        code.innerHTML = codeHTML;
+        lines.appendChild(num);
+        lines.appendChild(code);
+        return code;
+      }
+      function renderStatic() {
+        if (!lines) return;
+        lines.innerHTML = '';
+        ln = 0;
+        steps.forEach(function (s) {
+          addRow('<span class="t-prompt">$</span> <span class="t-cmd">' + s.cmd + '</span>');
+          addRow('<span class="' + s.cls + '">' + s.out + '</span>');
+        });
+        addRow('<span class="t-prompt">$</span> <span class="caret"></span>');
+      }
+      var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+      async function typewriter() {
+        if (!lines) return;
+        lines.innerHTML = '';
+        ln = 0;
+        for (var i = 0; i < steps.length; i++) {
+          var s = steps[i];
+          var code = addRow('<span class="t-prompt">$</span> <span class="t-cmd"></span><span class="caret"></span>');
+          var cmdSpan = code.querySelector('.t-cmd');
+          var caret = code.querySelector('.caret');
+          for (var c = 0; c < s.cmd.length; c++) {
+            cmdSpan.textContent = s.cmd.slice(0, c + 1);
+            await wait(30);
+          }
+          await wait(260);
+          if (caret) caret.remove();
+          var outCode = addRow('<span class="' + s.cls + '"></span>');
+          var outSpan = outCode.querySelector('span');
+          for (var o = 0; o < s.out.length; o++) {
+            outSpan.textContent = s.out.slice(0, o + 1);
+            await wait(14);
+          }
+          await wait(320);
+        }
+        addRow('<span class="t-prompt">$</span> <span class="caret"></span>');
+      }
+      if (lines) { if (rm) renderStatic(); else typewriter(); }
+
+      /* copy email */
+      var copyBtn = document.getElementById('copy-email');
+      var toast = document.getElementById('toast');
+      var EMAIL = 'itsravensland@gmail.com';
+      var toastTimer = null;
+      function showToast() {
+        if (!toast) return;
+        toast.classList.add('show');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2400);
+      }
+      if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(EMAIL).then(showToast).catch(fallbackCopy);
+          } else { fallbackCopy(); }
+        });
+      }
+      function fallbackCopy() {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = EMAIL; ta.setAttribute('readonly', '');
+          ta.style.position = 'absolute'; ta.style.left = '-9999px';
+          document.body.appendChild(ta); ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast();
+        } catch (e) { /* no-op */ }
+      }
+    })();
+  </script>
+</body>
+</html>
